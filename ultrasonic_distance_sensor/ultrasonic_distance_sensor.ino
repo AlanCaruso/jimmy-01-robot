@@ -1,4 +1,5 @@
-#include <AFMotor.h>
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
 
 const int trigPin = 18; // Define el pin A4 como el pin digital 18
 const int echoPin = 14; // Define el pin A0 como el pin digital 14
