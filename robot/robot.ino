@@ -1,7 +1,8 @@
 #include <AFMotor.h>
 
-const int trigPin = 9; // Define un pin digital para trig
-const int echoPin = 8; // Define un pin digital para echo
+const int trigPin = 18; // Define el pin A4 como el pin digital 18
+const int echoPin = 14; // Define el pin A0 como el pin digital 14
+const int ledPin = 13; // Pin para el LED indicador
 
 // Crear objetos para los motores en las posiciones M1 y M2
 AF_DCMotor motor1(1);  // Motor en la posición M1
@@ -13,6 +14,8 @@ int distance; // Variable para almacenar la distancia calculada
 void setup() {
   pinMode(trigPin, OUTPUT); // Configura trigPin como salida
   pinMode(echoPin, INPUT); // Configura echoPin como entrada
+  pinMode(ledPin, OUTPUT); // Configura el LED como salida
+
   Serial.begin(9600); // Inicia la comunicación serial a 9600 baudios
   Serial.println("Sensor de proximidad iniciado");
 }
@@ -30,10 +33,6 @@ void loop() {
   // Lee el pulso de echoPin
   duration = pulseIn(echoPin, HIGH); 
 
-  // Imprime la duración del pulso en el Monitor Serial
-  Serial.print("Duración del pulso: ");
-  Serial.println(duration);
-
   // Calcula la distancia en centímetros
   distance = duration * 0.034 / 2; 
 
@@ -42,20 +41,40 @@ void loop() {
   Serial.print(distance);
   Serial.println(" cm");
 
-  if(distance > 5){
-    Serial.println("Motor 1 Sentido horario");
-    motor1.setSpeed(200);     // Establecer la velocidad del motor 1 (0-255)
-    motor1.run(FORWARD); 
+  if (distance > 20) {
+    // Movimiento hacia adelante
+    motor1.setSpeed(200);
+    motor1.run(FORWARD);
 
-    Serial.println("Motor 2 Sentido horario");
-    motor2.setSpeed(200);     // Establecer la velocidad del motor 2 (0-255)
-    motor2.run(FORWARD); 
+    motor2.setSpeed(200);
+    motor2.run(FORWARD);
+
+    digitalWrite(ledPin, LOW); // Apaga el LED cuando no hay obstáculos
   } else {
-    Serial.println("Detener ambos motores");
-    motor1.run(RELEASE);      // Detener el motor 1
-    motor2.run(RELEASE);      // Detener el motor 2
+    // Detiene motores
+    motor1.run(RELEASE);
+    motor2.run(RELEASE);
+
+    // Retrocede ligeramente
+    Serial.println("Obstáculo detectado: Retrocediendo");
+    motor1.setSpeed(150);
+    motor1.run(BACKWARD);
+    motor2.setSpeed(150);
+    motor2.run(BACKWARD);
+    delay(500);
+
+    // Gira a la derecha
+    Serial.println("Girando a la derecha");
+    motor1.run(FORWARD);  // Motor izquierdo hacia adelante
+    motor2.run(BACKWARD); // Motor derecho hacia atrás
+    digitalWrite(ledPin, HIGH); // Enciende el LED durante el giro
+    delay(500);
+
+    // Detener motores después del giro
+    motor1.run(RELEASE);
+    motor2.run(RELEASE);
+    digitalWrite(ledPin, LOW); // Apaga el LED después del giro
   }
 
-  // Espera un pequeño intervalo antes de la siguiente medición
-  delay(100); 
+  delay(100); // Espera antes de la siguiente medición
 }
